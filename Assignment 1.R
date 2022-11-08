@@ -177,6 +177,43 @@ ggboxplot(T14, x = "Materiaal", y = "Decibel (dB)",
 
 
 
+# Code suggestions Bas - normality testing & variance testing (ignoring pressure) #
+###################################################################################
 
+# read data
+library(googlesheets4)
+T1 <- read_sheet('https://docs.google.com/spreadsheets/d/15faUz2ZYdj8hQc3b9llxWrPSxGyioFlo4C87pzw872s/edit#gid=0')
+T2 <- read_sheet('https://docs.google.com/spreadsheets/d/18KvPKyhgynePwedNfQOHeszdRi6sBr7PU4HXMSS_YcE/edit#gid=0')
+T3 <- read_sheet('https://docs.google.com/spreadsheets/d/19oa7gPIFAmYo-hUL0WH-TajQ1As_-XneFdQ14lAOavQ/edit#gid=0')
+T4 <- read_sheet('https://docs.google.com/spreadsheets/d/1NmxbzwT-uYsEKerhbsbV1ItFqRuCsYsL8X9oFYGIpnA/edit#gid=0')
+
+# combine data & rename variable
+df <- rbind(T1,T2,T3,T4)
+names(df) <- c("db","druk", "vorm", "materiaal")
+
+# test normality for independent 1: materiaal
+library(nortest)
+library(coin)
+tapply(df$db,df$materiaal, lillie.test)
+tapply(df$db,df$materiaal, shapiro.test)
+# All data are suffiently normal (only one group and 1 test barely below 0.05) > parametric test
+
+# test normality for independent 2: vorm
+tapply(df$db,df$vorm, lillie.test)
+tapply(df$db,df$vorm, shapiro.test)
+# All data are suffiently normal (only one group and 1 test barely below 0.05) > parametric test
+
+# testing H1: the dB is different for different materials (ANOVA)
+anova <- aov(db ~ materiaal, data = df)
+tapply(df$db,df$materiaal,mean)
+summary(anova)
+TukeyHSD(anova)
+# conclusion: H1 supported - the dB is different for all materials, with PAP as the best reducer and HPDE as the worst
+
+# testing H2: the dB is different for different shapes (ANOVA)
+anova <- aov(db ~ vorm, data = df)
+tapply(df$db,df$vorm,mean)
+summary(anova)
+# conclusion: H2 not supported there is no dB difference between shapes
 
 
